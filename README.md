@@ -51,8 +51,7 @@ Just like the previous assignment, we have a project template you can import to 
 
 
 1. Download[ the project template zip file](http://www.cse.buffalo.edu/~stevko/courses/cse486/spring19/files/SimpleDynamo.zip) to a directory.
-2. Extract the template zip file and copy it to your Android Studio projects directory.
-    1. Make sure that you copy the correct directory. After unzipping, the directory name should be “SimpleDynamo”, and right underneath, it should contain a number of directories and files such as “app”, “build”, “gradle”, “build.gradle”, “gradlew”, etc.
+2. Extract the template zip file and copy it to your Android Studio projects directory. Make sure that you copy the correct directory. After unzipping, the directory name should be “SimpleDynamo”, and right underneath, it should contain a number of directories and files such as “app”, “build”, “gradle”, “build.gradle”, “gradlew”, etc.
 3. After copying, delete the downloaded template zip file and unzipped directories and files. This is to make sure that you do not submit the template you just downloaded. (There were many people who did this before.)
 4. Open the project template you just copied in Android Studio.
 5. Use the project template for implementing all the components for this assignment.
@@ -89,12 +88,12 @@ Just like the previous assignment, the content provider should implement all sto
     4. You need to use run_avd.py and set_redir.py to set up the testing environment.
     5. The grading will use 5 AVDs. The redirection ports are 11108, 11112, 11116, 11120, and 11124.
     6. You should just hard-code the above 5 ports and use them to set up connections.
-    7. Please use the code snippet provided in PA1 on how to determine your local AVD.
-        1. emulator-5554: “5554”
-        2. emulator-5556: “5556”
-        3. emulator-5558: “5558”
-        4. emulator-5560: “5560”
-        5. emulator-5562: “5562”
+    7. Please use the code snippet provided in PA1 on how to determine your local AVD.    
+      1. emulator-5554: “5554”
+      2. emulator-5556: “5556”
+      3. emulator-5558: “5558”
+      4. emulator-5560: “5560”
+      5. emulator-5562: “5562”
 15. Any app (not just your app) should be able to access (read and write) your content provider. As with the previous assignment, please do not include any permission to access your content provider.
 16. Please read the notes at the end of this document. You might run into certain problems, and the notes might give you some ideas about a couple of potential problems.
 
@@ -103,29 +102,29 @@ The following is a guideline for your content provider based on the design of Am
 
 
 1. **_Membership_**
-    1. _Just as the original Dynamo, every node can know every other node._ This means that each node knows all other nodes in the system and also knows exactly which partition belongs to which node; any node can forward a request to the correct node without using a ring-based routing.
+   * _Just as the original Dynamo, every node can know every other node._ This means that each node knows all other nodes in the system and also knows exactly which partition belongs to which node; any node can forward a request to the correct node without using a ring-based routing.
 2. **_Request routing_**
-    2. Unlike Chord, each Dynamo node knows all other nodes in the system and also knows exactly which partition belongs to which node.
-    3. Under no failures, a request for a key is directly forwarded to the coordinator (i.e., the successor of the key), and the coordinator should be in charge of serving read/write operations.
+   * Unlike Chord, each Dynamo node knows all other nodes in the system and also knows exactly which partition belongs to which node.
+   * Under no failures, a request for a key is directly forwarded to the coordinator (i.e., the successor of the key), and the coordinator should be in charge of serving read/write operations.
 3. **_Quorum replication_**
-    4. For linearizability, you can implement a quorum-based replication used by Dynamo.
-    5. Note that the original design does not provide linearizability. You need to adapt the design.
-    6. _The replication degree N should be 3._ This means that given a key, the key’s coordinator as well as the 2 successor nodes in the Dynamo ring should store the key.
-    7. _Both the reader quorum size R and the writer quorum size W should be 2._
-    8. The coordinator for a get/put request should _always contact other two nodes_ and get a vote from each (i.e., an acknowledgement for a write, or a value for a read).
-    9. For write operations, all objects can be versioned in order to distinguish stale copies from the most recent copy.
-    10. For read operations, if the readers in the reader quorum have different versions of the same object, the coordinator should pick the most recent version and return it.
+   * For linearizability, you can implement a quorum-based replication used by Dynamo.
+   * Note that the original design does not provide linearizability. You need to adapt the design.
+6. _The replication degree N should be 3._ This means that given a key, the key’s coordinator as well as the 2 successor nodes in the Dynamo ring should store the key.
+   * _Both the reader quorum size R and the writer quorum size W should be 2._
+   * The coordinator for a get/put request should _always contact other two nodes_ and get a vote from each (i.e., an acknowledgement for a write, or a value for a read).
+   * For write operations, all objects can be versioned in order to distinguish stale copies from the most recent copy.
+   * For read operations, if the readers in the reader quorum have different versions of the same object, the coordinator should pick the most recent version and return it.
 4. **_Chain replication_**
-    11. Another replication strategy you can implement is chain replication, which provides linearizability.
-    12. If you are interested in more details, please take a look at the following paper: [http://www.cs.cornell.edu/home/rvr/papers/osdi04.pdf](http://www.cs.cornell.edu/home/rvr/papers/osdi04.pdf)
-    13. In chain replication, a write operation always comes to the first partition; then it propagates to the next two partitions in sequence. The last partition returns the result of the write.
-    14. A read operation always comes to the last partition and reads the value from the last partition.
+   * Another replication strategy you can implement is chain replication, which provides linearizability.
+   * If you are interested in more details, please take a look at the following paper: [http://www.cs.cornell.edu/home/rvr/papers/osdi04.pdf](http://www.cs.cornell.edu/home/rvr/papers/osdi04.pdf)
+   * In chain replication, a write operation always comes to the first partition; then it propagates to the next two partitions in sequence. The last partition returns the result of the write.
+   * A read operation always comes to the last partition and reads the value from the last partition.
 5. **_Failure handling_**
-    15. Handling failures should be done very carefully because there can be many corner cases to consider and cover.
-    16. Just as the original Dynamo, each request can be used to detect a node failure.
-    17. _For this purpose, you can use a timeout for a socket read;_ you can pick a reasonable timeout value, e.g., 100 ms, and if a node does not respond within the timeout, you can consider it a failure.
-    18. **_Do not rely on socket creation or connect status to determine if a node has failed._** Due to the Android emulator networking setup, it is **not** safe to rely on socket creation or connect status to judge node failures. Please use an explicit method to test whether an app instance is running or not, e.g., using a socket read timeout as described above.
-    19. When a coordinator for a request fails and it does not respond to the request, _its successor can be contacted next for the request._
+   * Handling failures should be done very carefully because there can be many corner cases to consider and cover.
+   * Just as the original Dynamo, each request can be used to detect a node failure.
+   * _For this purpose, you can use a timeout for a socket read;_ you can pick a reasonable timeout value, e.g., 100 ms, and if a node does not respond within the timeout, you can consider it a failure.
+   * **_Do not rely on socket creation or connect status to determine if a node has failed._** Due to the Android emulator networking setup, it is **not** safe to rely on socket creation or connect status to judge node failures. Please use an explicit method to test whether an app instance is running or not, e.g., using a socket read timeout as described above.
+   * When a coordinator for a request fails and it does not respond to the request, _its successor can be contacted next for the request._
 
 
 #### **Testing**
@@ -135,22 +134,22 @@ We have testing programs to help you see how your code does with our grading cri
 
 
 1. Testing basic ops
-    1. This phase will test basic operations, i.e., insert, query, delete, @, and *. This will test if everything is correctly replicated. There is no concurrency in operations and there is no failure either.
+   * This phase will test basic operations, i.e., insert, query, delete, @, and *. This will test if everything is correctly replicated. There is no concurrency in operations and there is no failure either.
 2. Testing concurrent ops with different keys
-    2. This phase will test if your implementation can handle concurrent operations under no failure.
-    3. The tester will use independent (key, value) pairs inserted/queried concurrently on all the nodes.
+   * This phase will test if your implementation can handle concurrent operations under no failure.
+   * The tester will use independent (key, value) pairs inserted/queried concurrently on all the nodes.
 3. Testing concurrent ops with same keys
-    4. This phase will test if your implementation can handle concurrent operations with same keys under no failure.
-    5. The tester will use the same set of (key, value) pairs inserted/queried concurrently on all the nodes.
+   * This phase will test if your implementation can handle concurrent operations with same keys under no failure.
+   * The tester will use the same set of (key, value) pairs inserted/queried concurrently on all the nodes.
 4. Testing one failure
-    6. This phase will test one failure with every operation.
-    7. One node will crash before operations start. After all the operations are done, the node will recover.
-    8. This will be repeated for each and every operation.
+   * This phase will test one failure with every operation.
+   * One node will crash before operations start. After all the operations are done, the node will recover.
+   * This will be repeated for each and every operation.
 5. Testing concurrent operations with one failure
-    9. This phase will execute operations concurrently and crash one node in the middle of the execution. After some time, the failed node will also recover in the middle of the execution.
+   * This phase will execute operations concurrently and crash one node in the middle of the execution. After some time, the failed node will also recover in the middle of the execution.
 6. Testing concurrent operations with one consistent failure
-    10. This phase will crash one node at a time consistently, i.e., one node will crash then recover, and another node will crash and recover, etc.
-    11. There will be a brief period of time in between the crash-recover sequence.
+   * This phase will crash one node at a time consistently, i.e., one node will crash then recover, and another node will crash and recover, etc.
+   * There will be a brief period of time in between the crash-recover sequence.
 
 Each testing phase is quite intensive (i.e., it will take some time for each phase to finish), so the tester allows you to specify which testing phase you want to test. You won’t have to wait until everything is finished every time. However, you still need to make sure that you run the tester in its entirety before you submit. _We will not test individual testing phases separately in our grading._
 
